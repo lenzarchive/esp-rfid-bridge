@@ -7,7 +7,7 @@ Firmware for the ESP32-C3 (Super Mini) that reads RFID cards via an RC522 module
 ## Overview
 
 ```
-┌─────────────┐    SPI     ┌───────────────┐   USB CDC   ┌─────────────┐
+┌─────────────┐    SPI    ┌───────────────┐   USB CDC   ┌─────────────┐
 │  RFID Card  │ ────────► │  ESP32-C3 +   │ ──────────► │  Host/      │
 │  (ISO 14443)│           │  RC522 Module │ ◄────────── │  Server     │
 └─────────────┘           └───────────────┘  JSON/UART  └─────────────┘
