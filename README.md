@@ -1,6 +1,6 @@
 # esp-rfid-bridge
 
-Firmware for the ESP32-C3 (Super Mini) that reads RFID cards via an RC522 module and relays card identifiers to a host system over USB Serial using a JSON protocol. The host is responsible for all access-control logic; the firmware handles only hardware I/O and LED feedback.
+Firmware for the ESP32-C3 that reads RFID cards via an RC522 module and relays card identifiers to a host system over USB Serial using a JSON protocol. The host is responsible for all access-control logic; the firmware handles only hardware I/O and LED feedback.
 
 ---
 
