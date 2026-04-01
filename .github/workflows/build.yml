@@ -1,0 +1,92 @@
+name: Build Firmware
+
+on:
+  push:
+    branches: ["main", "master", "develop"]
+    tags:     ["v*"]
+  pull_request:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: PlatformIO Build (ESP32-C3)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio-${{ hashFiles('platformio.ini') }}
+          restore-keys: ${{ runner.os }}-pio-
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PlatformIO
+        run: pip install --upgrade platformio
+
+      - name: Build firmware
+        run: platformio run
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p dist
+          for dir in .pio/build/*/; do
+            name=$(basename "$dir")
+            cp "$dir/firmware.bin" "dist/${name}-firmware.bin" 2>/dev/null || true
+            cp "$dir/firmware.elf" "dist/${name}-firmware.elf" 2>/dev/null || true
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware-esp32c3-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: firmware-esp32c3-${{ github.sha }}
+          path: dist/
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          body: |
+            ## ESP32-C3 RFID RC522 Firmware — ${{ github.ref_name }}
+
+            ### Flash via esptool
+            ```bash
+            esptool.py --chip esp32c3 --port /dev/ttyACM0 \
+              write_flash 0x0 esp32c3-supermini-firmware.bin
+            ```
+
+            ### Flash via PlatformIO
+            ```bash
+            pio run --target upload
+            ```
+
+            ### Flash via Browser
+            https://espressif.github.io/esptool-js/
+          files: dist/*.bin
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') }}
