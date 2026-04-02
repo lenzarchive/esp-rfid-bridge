@@ -106,7 +106,7 @@ void putConfig(JsonObjectConst d, int id) {
     if (d.containsKey("response_timeout")) cfg.response_timeout = d["response_timeout"].as<uint32_t>();
     if (d.containsKey("poll_interval_ms")) cfg.poll_interval_ms = d["poll_interval_ms"].as<uint32_t>();
     if (d.containsKey("post_read_delay"))  cfg.post_read_delay  = d["post_read_delay"].as<uint32_t>();
-    getConfig(id); // respond with the full updated config
+    getConfig(id);
 }
 
 // GET /uid
@@ -192,7 +192,7 @@ bool dispatch(const String& line, bool& accessGranted) {
         if (strcmp(resource, "access") == 0) {
             if (!hasData) { respondError(400, resource, "data required", id); return false; }
             accessGranted = postAccess(data, id);
-            return true; // signal: RFID wait-loop may exit
+            return true;
         }
         if (strcmp(resource, "reset") == 0) { postReset(id); return false; }
         respondError(404, resource, "resource not found", id);
@@ -206,13 +206,13 @@ bool dispatch(const String& line, bool& accessGranted) {
 // setup
 void setup() {
     Serial.begin(115200);
-    Serial.setTxTimeoutMs(0); // prevent hang when no serial monitor is open (USB CDC native)
+    Serial.setTxTimeoutMs(0);
     uint32_t t0 = millis();
     while (!Serial && (millis() - t0) < 3000) delay(10);
     bootTime = millis();
 
     pinMode(PIN_LED, OUTPUT);
-    digitalWrite(PIN_LED, HIGH); // LED off (active-low)
+    digitalWrite(PIN_LED, HIGH);
 
     SPI.begin(PIN_SCK, PIN_MISO, PIN_MOSI, PIN_SS);
     rfid.PCD_Init();
