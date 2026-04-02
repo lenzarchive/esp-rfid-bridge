@@ -28,8 +28,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install PlatformIO
-        run: pip install --upgrade platformio
+      - name: Install PlatformIO and esptool
+        run: pip install --upgrade platformio esptool
 
       - name: Build firmware
         run: platformio run
@@ -47,7 +47,7 @@ jobs:
             BOOT_APP0=$(find ~/.platformio/packages -name "boot_app0.bin" | head -1)
 
             esptool.py --chip esp32c3 merge_bin \
-              -o "dist/${name}-merged.bin" \
+              -o "dist/${name}-ERB.bin" \
               --flash_mode dio \
               --flash_freq 80m \
               --flash_size 4MB \
@@ -90,15 +90,18 @@ jobs:
           body: |
             ## ESP32-C3 RFID RC522 Firmware — ${{ github.ref_name }}
 
-            ### Flash via esptool
+            ### Download
+            Download the `*-ERB.bin` file — a single merged binary containing the bootloader, partition table, boot_app0, and application firmware.
+
+            ### Flash (Linux/Mac)
             ```bash
-            esptool.py --chip esp32c3 --port /dev/ttyACM0 \
-              write_flash 0x0 esp32c3-supermini-firmware.bin
+            esptool.py --chip esp32c3 --port /dev/ttyACM0 --baud 921600 \
+              write_flash 0x0 esp32c3-supermini-ERB.bin
             ```
 
-            ### Flash via PlatformIO
-            ```bash
-            pio run --target upload
+            ### Flash (Windows)
+            ```bat
+            esptool.py --chip esp32c3 --port COM12 --baud 921600 write_flash 0x0 esp32c3-supermini-ERB.bin
             ```
 
             ### Flash via Browser
