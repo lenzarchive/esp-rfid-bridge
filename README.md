@@ -295,24 +295,26 @@ GitHub Actions is configured in `.github/workflows/build.yml`.
 **Pipeline:**
 1. Restore PlatformIO cache keyed on `platformio.ini`
 2. Build firmware with `platformio run`
-3. Collect `firmware.bin` and `firmware.elf` from `.pio/build/`
-4. Upload as a build artifact retained for 30 days
+3. Merge `bootloader.bin`, `partitions.bin`, `boot_app0.bin`, and `firmware.bin` into a single flash image using `esptool merge_bin`
+4. Upload `*-ERB.bin` and `firmware.elf` as build artifacts retained for 30 days
 
 **Releases:**
 
-When a `v*` tag is pushed, an additional `release` job creates a GitHub Release and attaches the compiled `.bin` file. Tags containing `-rc` or `-beta` are marked as pre-releases automatically.
+When a `v*` tag is pushed, an additional `release` job creates a GitHub Release and attaches the compiled `*-ERB.bin` file. Tags containing `-rc` or `-beta` are marked as pre-releases automatically.
 
 ### Flashing a Released Binary
 
-Via esptool:
+Download `esp32c3-supermini-ERB.bin` from the release assets — it contains the bootloader, partition table, boot_app0, and application firmware in a single image.
+
+Via esptool (Linux/Mac):
 ```bash
-esptool.py --chip esp32c3 --port /dev/ttyACM0 \
-  write_flash 0x0 esp32c3-supermini-firmware.bin
+esptool.py --chip esp32c3 --port /dev/ttyACM0 --baud 921600 \
+  write_flash 0x0 esp32c3-supermini-ERB.bin
 ```
 
-Via PlatformIO:
-```bash
-pio run --target upload
+Via esptool (Windows):
+```bat
+esptool.py --chip esp32c3 --port COM12 --baud 921600 write_flash 0x0 esp32c3-supermini-ERB.bin
 ```
 
 Via browser: [esptool-js](https://espressif.github.io/esptool-js/)
