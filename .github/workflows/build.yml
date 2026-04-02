@@ -90,22 +90,72 @@ jobs:
           body: |
             ## ESP32-C3 RFID RC522 Firmware — ${{ github.ref_name }}
 
-            ### Download
-            Download the `*-ERB.bin` file — a single merged binary containing the bootloader, partition table, boot_app0, and application firmware.
+            Firmware for the ESP32-C3 Super Mini that reads RFID cards via an RC522 module and relays card identifiers to a host system over USB Serial using a JSON protocol.
 
-            ### Flash (Linux/Mac)
+            ---
+
+            ### Assets
+
+            | File | Description |
+            |------|-------------|
+            | `esp32c3-supermini-ERB.bin` | Merged flash image — bootloader + partition table + boot_app0 + firmware |
+            | `esp32c3-supermini-firmware.elf` | ELF binary for debugging / stack trace decoding |
+
+            ---
+
+            ### Requirements
+
+            - [esptool](https://github.com/espressif/esptool) (`pip install esptool`)
+            - ESP32-C3 Super Mini connected via USB
+
+            ---
+
+            ### Flash Instructions
+
+            **Linux / Mac**
             ```bash
             esptool.py --chip esp32c3 --port /dev/ttyACM0 --baud 921600 \
               write_flash 0x0 esp32c3-supermini-ERB.bin
             ```
 
-            ### Flash (Windows)
+            **Windows**
             ```bat
             esptool.py --chip esp32c3 --port COM12 --baud 921600 write_flash 0x0 esp32c3-supermini-ERB.bin
             ```
 
-            ### Flash via Browser
+            **Browser (no installation required)**
             https://espressif.github.io/esptool-js/
+
+            ---
+
+            ### Hardware Pinout
+
+            | Signal | GPIO |
+            |--------|------|
+            | SCK    | 4    |
+            | MISO   | 5    |
+            | MOSI   | 6    |
+            | SS     | 7    |
+            | RST    | 10   |
+            | LED    | 8    |
+
+            ---
+
+            ### Serial Protocol
+
+            Communication runs at **115200 baud** over USB CDC. Each message is a single-line JSON object terminated by `\n`.
+
+            **Card detected event (Device → Host)**
+            ```json
+            {"event": "card", "uid": "AB:CD:EF:12"}
+            ```
+
+            **Access decision (Host → Device)**
+            ```json
+            {"method": "POST", "resource": "access", "data": {"access": true}}
+            ```
+
+            Full API reference: [README.md](https://github.com/${{ github.repository }}/blob/main/README.md)
           files: |
             dist/*.bin
           draft: false
