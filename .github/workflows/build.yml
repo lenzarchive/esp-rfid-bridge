@@ -34,12 +34,28 @@ jobs:
       - name: Build firmware
         run: platformio run
 
-      - name: Collect artifacts
+      - name: Merge binaries into single flash image
         run: |
           mkdir -p dist
+
           for dir in .pio/build/*/; do
             name=$(basename "$dir")
-            cp "$dir/firmware.bin" "dist/${name}-firmware.bin" 2>/dev/null || true
+
+            BOOTLOADER="$dir/bootloader.bin"
+            PARTITIONS="$dir/partitions.bin"
+            FIRMWARE="$dir/firmware.bin"
+            BOOT_APP0=$(find ~/.platformio/packages -name "boot_app0.bin" | head -1)
+
+            esptool.py --chip esp32c3 merge_bin \
+              -o "dist/${name}-merged.bin" \
+              --flash_mode dio \
+              --flash_freq 80m \
+              --flash_size 4MB \
+              0x0000 "$BOOTLOADER" \
+              0x8000 "$PARTITIONS" \
+              0xe000 "$BOOT_APP0" \
+              0x10000 "$FIRMWARE"
+
             cp "$dir/firmware.elf" "dist/${name}-firmware.elf" 2>/dev/null || true
           done
 
@@ -87,6 +103,8 @@ jobs:
 
             ### Flash via Browser
             https://espressif.github.io/esptool-js/
-          files: dist/*.bin
+          files: |
+            dist/*.bin
           draft: false
           prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') }}
+          
