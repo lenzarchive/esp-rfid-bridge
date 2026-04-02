@@ -206,6 +206,7 @@ bool dispatch(const String& line, bool& accessGranted) {
 // setup
 void setup() {
     Serial.begin(115200);
+    Serial.setTxTimeoutMs(0); // prevent hang when no serial monitor is open (USB CDC native)
     uint32_t t0 = millis();
     while (!Serial && (millis() - t0) < 3000) delay(10);
     bootTime = millis();
